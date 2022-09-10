@@ -17,6 +17,8 @@ import java.util.Properties;
 public class ArticleStore implements Store<Article>, AutoCloseable {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ArticleStore.class.getSimpleName());
+    private static final String ERROR_MSG = "Не удалось выполнить операцию: { }";
+    private static final String SAVE_MSG = "Сохранение статьи";
 
     private final Properties properties;
 
@@ -37,7 +39,7 @@ public class ArticleStore implements Store<Article>, AutoCloseable {
                     properties.getProperty("password")
             );
         } catch (SQLException throwables) {
-            LOGGER.error("Не удалось выполнить операцию: { }", throwables.getCause());
+            LOGGER.error(ERROR_MSG, throwables.getCause());
             throw new IllegalStateException();
         }
     }
@@ -48,14 +50,14 @@ public class ArticleStore implements Store<Article>, AutoCloseable {
             var sql = Files.readString(Path.of("db/scripts", "articles.sql"));
             statement.execute(sql);
         } catch (Exception e) {
-            LOGGER.error("Не удалось выполнить операцию: { }", e.getCause());
+            LOGGER.error(ERROR_MSG, e.getCause());
             throw new IllegalStateException();
         }
     }
 
     @Override
     public Article save(Article model) {
-        LOGGER.info("Сохранение статьи");
+        LOGGER.info(SAVE_MSG);
         var sql = "insert into articles(text) values(?)";
         try (var statement = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             statement.setString(1, model.getText());
@@ -65,7 +67,7 @@ public class ArticleStore implements Store<Article>, AutoCloseable {
                 model.setId(key.getInt(1));
             }
         } catch (Exception e) {
-            LOGGER.error("Не удалось выполнить операцию: { }", e.getCause());
+            LOGGER.error(ERROR_MSG, e.getCause());
             throw new IllegalStateException();
         }
         return model;
@@ -85,7 +87,7 @@ public class ArticleStore implements Store<Article>, AutoCloseable {
                 ));
             }
         } catch (Exception e) {
-            LOGGER.error("Не удалось выполнить операцию: { }", e.getCause());
+            LOGGER.error(ERROR_MSG, e.getCause());
             throw new IllegalStateException();
         }
         return articles;
